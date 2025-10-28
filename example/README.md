@@ -1,0 +1,272 @@
+# iDesignRES: Solar Energy Model
+
+## Use Case full example: Castilla y León (NUTS2 ES41)
+
+The purpose of this example is the validation of the results obtained with the developed solar power model by comparing the estimated time-series of annual energy generation in large Photovoltaic (PV) plants on hourly basis for all the NUTS2 regions contained in **Spanish** **Peninsular region** (that means excluding Balearian and
+Canarian Islands and Ceuta y Melilla) with aggregated PV generation profile data provided also on hourly basis by [Esios Red Eléctrica](https://www.esios.ree.es/en) in this region for the year 2020.
+
+Firstly, is established the power capacity installed in each NUTS2 region at the given time (2020). Data have been extracted from [Red Eléctrica de España](https://www.ree.es/en).
+
+| NUTS2 | Autonomous community | Power (MWp) |
+| ----- | -------------------- | ----------- |
+| ES61  | Andalucía            | 2715        |
+| ES24  | Aragón               | 1102        |
+| ES12  | Asturias             | 1           |
+| ES13  | Cantabria            | 2           |
+| ES42  | Castilla La Mancha   | 1942        |
+| ES41  | Castilla y León      | 847         |
+| ES51  | Cataluña             | 289         |
+| ES30  | Madrid               | 64          |
+| ES52  | Valencia             | 365         |
+| ES43  | Extremadura          | 2526        |
+| ES11  | Galicia              | 18          |
+| ES23  | La Rioja             | 99          |
+| ES62  | Murcia               | 1272        |
+| ES22  | Navarra              | 170         |
+| ES21  | País Vasco           | 51          |
+
+The most suitable available areas in each NUTS3 region of the autonomous communities are established categorizing by intervals of 100W/m2.
+
+The solar power model provides time-series of annual energy electrical generation at NUTS3 level for each autonomous community considering the tracking systems percentage 30% and fixed system percentage 70% as it is indicated in [International Technology Roadmap for Photovoltaics (ITRPV)](https://www.vdma.org/international-technology-roadmap-photovoltaic) for 2020.
+
+![buildings_es21_example_03.png](../assets/solar_example_01.png)
+
+Finally, the energy generation profiles at NUTS3 level are aggregated at Peninsular data level.
+
+Regarding the results, the ratio between the simulated annual generation and the provided by the profile extracted from [Esios Red Eléctrica](https://www.esios.ree.es/en) is **99.94%**.
+
+|                        | iDesignRes peninsular | Esios peninsular |        |
+| ---------------------- | --------------------- | ---------------- | ------ |
+| Anual generation (GWh) | 14933,53412           | 14924,59061      | 99,94% |
+
+A comparison of the profiles is presented below considering a couple of weeks in the year (summer and winter):
+
+![buildings_es21_example_03.png](../assets/solar_example_02.png)
+
+![buildings_es21_example_03.png](../assets/solar_example_03.png)
+
+---
+
+#### Execution
+
+---
+
+As mentioned in [Implemented features](../README.md#implemented-features) section, it is necessary to clarify that at the current stage of development, only the *ES41* region is available for processing.
+
+The Solar Energy Model uses two main types of input data:
+
+1. **Parameters defined in the *input.json* file**.
+
+2. **Radiation data obtained from a prior geoprocessing step**, stored in a CSV file.
+
+Radiation data is obtained from a previous geoprocessing operation combining several layers, such as global incident solar radiation (GHI), soil and environmental protection, land use and slope, to identify the most suitable areas for installation, excluding those where it is not possible to do so.
+
+This process provides a CSV file that will be used as input for the solar generation model for large plants. In this case, the analysis is carried out at the NUTS3 region level to consider possible changes in terrain and radiation.
+
+The generated CSV provides, for each NUTS3 region, the **distribution of available area according to solar radiation levels**, starting from 700 **kWh/m²·year (value previously defined as a threshold)**.
+
+It provides the information about:
+
+- **Where** suitable surfaces are.
+
+- **How much area** they represent, and
+
+- **What level of solar radiation** they receive.
+
+Each **row** in the CSV corresponds to:
+
+- One **NUTS3 region**, and
+
+- One **radiation band** (e.g., 700–800, 800–900, …).
+
+| Column                                 | Description                                                                                                                                   | Units / Type        |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| Region                                 | NUTS3 code of the subregion                                                                                                                   | Text                |
+| Centroid_X, Centroid_Y                 | Longitude and latitude of the region centroid                                                                                                 | Degrees (EPSG:4326) |
+| Total_Area                             | Total geometric area of the region                                                                                                            | m²                  |
+| Max_Radiation                          | Maximum radiation value within the region                                                                                                     | kWh/m²·year         |
+| Average_Radiation                      | Mean radiation value within the region                                                                                                        | kWh/m²·year         |
+| Threshold                              | Lower limit of the radiation band (700, 800, 900, …)                                                                                          | Numeric             |
+| Area_m2                                | Area (m²) within that radiation band [Threshold, Threshold+100) that meets all filters (valid land use, non-protected, slope below threshold) | m²                  |
+| Median_Radiation                       | Median radiation value within that band                                                                                                       | kWh/m²·year         |
+| Median_Radiation_X, Median_Radiation_Y | Coordinates (lon/lat) of the pixel closest to the median radiation value                                                                      | Degrees (EPSG:4326) |
+
+To interpret it, each row represents a **solar potential band** within a NUTS3 region. For example:
+
+```
+Region = ES123, Threshold = 800, Area_m2 = 1,250,000, Median_Radiation = 845
+```
+
+In region **ES123**, there are **1.25 km²** of usable area with solar radiation between **800 and 900 kWh/m²·year**, and the median value of that band is **845 kWh/m²·year**.
+
+Regarding the information contained in the *input.json* file, it defines the execution scenario as follows:
+
+```
+{
+    "nutsid": "ES41",
+    "slope_angle": 10,
+    "area_total_thermal":  null,
+    "area_total_pv": null,
+    "power_thermal": 10,
+    "power_pv": 200,
+    "capex_thermal": null,
+    "capex_pv": null,
+    "tilt": 30,
+    "azimuth": 180,
+    "loss": 14,
+    "tracking_percentage": 60,
+    "efficiency_thermal": 45,
+    "efficiency_optical": 65,
+    "aperture":50,
+    "system_cost_thermal": 5,
+    "system_cost_pv": 0.5,
+    "opex_thermal": 20000,
+    "opex_pv": 15000,
+    "min_ghi_thermal": 1700,
+    "min_ghi_pv": 1000,
+    "land_use_thermal": 50,
+    "land_use_pv": 100,
+    "convert_coord": 1,
+    "pvgis_year": 2019
+}
+```
+
+To facilitate the adjustment of scenario values, the set of editable properties and their possible values ​​are described below as a data dictionary:
+
+```
+- nutsid: text -> Identifier of NUTS2 region for which the analysis will be carried out.
+- slope_angle: integer between 0 and 360 -> Maximum slope angle in º with which a land area can be considered suitable for PV.
+- area_total_thermal: null, or integer between 0 and 10000000000 -> Area in m2 to deploy CSP technology. 
+- area_total_pv: null, or integer between 0 and 10000000000 -> Area in m2 to deploy PV technology.
+- power_thermal: null, or integer between 0 and 1000000000000 -> CSP power capacity in MW to be deployed.
+- power_pv: null, or integer between 0 and 1000000000000 -> PV power capacity in MW to be deployed.
+- capex_thermal: null, or integer between 0 and 500000000000 -> Investment in € to deploy CSP technology.
+- capex_pv: null, or integer between 0 and 500000000000 -> Investment in € to deploy PV technology.
+- tilt: integer between 0 and 90 -> Tilt angle in º from horizontal plane.
+- azimuth: integer between 0 and 360 -> Orientation (azimuth angle) of the (fixed) plane of array. Clockwise from north.
+- tracking_percentage: integer between 0 and 100 -> Percentage in % of single-axis tracking systems from the total PV capacity. The rest is considered fixed mounted systems.
+- loss: integer between 8 and 20 -> Percentage in % of power losses of PV systems. Please read the documentation to understand which other losses are already included in the model.
+- efficiency_thermal: integer between 25 and 65 -> Thermal efficiency in % of collectors of CSP systems.
+- efficiency_optical: integer between 45 and 85 -> Amount of incoming solar radiation in % captured in the collectors of CSP systems.
+- aperture: integer between 25 and 75 -> Aperture area in % of solar field of CSP systems.
+- system_cost_thermal: decimal number between 1 and 10 -> CAPEX in €/W of CSP technology to compute CSP power capacity to be installed from a given investment.
+- system_cost_pv: decimal number between 0.2 and 1 -> CAPEX in €/W of PV technology to compute PV power capacity to be installed from a given investment.
+- opex_thermal: decimal number between 0 and 40000 -> Annual Operational Expenditures in €/MW for CSP technology.
+- opex_pv: decimal number between 0 and 30000 -> Annual Operational Expenditures in €/MW for PV technology.
+- min_ghi_thermal: integer between 1500 and 2500 -> Minimum annual Global Horizontal Irradiance in kWh/m2 in a land area to install CSP systems.
+- min_ghi_pv: integer between 500 and 2000 -> Minimum annual Global Horizontal Irradiance in kWh/m2 in a land area to install PV systems.
+- land_use_thermal: integer between 25 and 100 -> Land use ratio of CSP technology in W/m2 to compute required area for a given CSP power capacity.
+- land_use_pv: integer between 50 and 200 -> Land use ratio of PV technology in W/m2 to compute required area for a given PV power capacity.
+- convert_coord: integer with the value 0 (False) or 1 (True) -> Convert coordinates expressed into EPSG:3035 to EPSG:4326.
+- pvgis_year: integer between 1900 and 2020 -> Year for calculate time-series hourly production.
+```
+
+Assuming that the model is already installed with Poetry, execute the command:
+
+```
+poetry run python solar_power_plants.py <input_payload> <start_time> <end_time>
+```
+
+Let's suppose that the information to be obtained corresponds to the period between 1:00 p.m. on March 1, 2019, and 1:00 p.m. on March 2, 2019.. The *<start_time>* and *<end_time>* parameters will have the values:
+
+> 2019-03-01T13:00:00    :    start_time
+> 
+> 2019-03-02T13:00:00    :    end_time
+
+So, the final execution command will be as follows:
+
+```
+poetry run python solar_power_plants.py input.json 2019-03-01T13:00:00 2019-03-02T13:00:00
+```
+
+This command automatically runs the simulation, taking the necessary input data from the *[usecases](../usecases)* folder and the *[input.json](../input.json)* file.
+
+All input values ​​will be validated, and the user will be notified of those that do not comply with the scheme.
+
+When the execution finishes, a result similar to the following is obtained:
+
+```
+{
+    'time(UTC)': [
+        Timestamp('2019-03-01 13:00:00'),
+        Timestamp('2019-03-01 14:00:00'),
+        Timestamp('2019-03-01 15:00:00'),
+        Timestamp('2019-03-01 16:00:00'),
+        Timestamp('2019-03-01 17:00:00'),
+        Timestamp('2019-03-01 18:00:00'),
+        Timestamp('2019-03-01 19:00:00'),
+        Timestamp('2019-03-01 20:00:00'),
+        Timestamp('2019-03-01 21:00:00'),
+        Timestamp('2019-03-01 22:00:00'),
+        Timestamp('2019-03-01 23:00:00'),
+        Timestamp('2019-03-02 00:00:00'),
+        Timestamp('2019-03-02 01:00:00'),
+        Timestamp('2019-03-02 02:00:00'),
+        Timestamp('2019-03-02 03:00:00'),
+        Timestamp('2019-03-02 04:00:00'),
+        Timestamp('2019-03-02 05:00:00'),
+        Timestamp('2019-03-02 06:00:00'),
+        Timestamp('2019-03-02 07:00:00'),
+        Timestamp('2019-03-02 08:00:00'),
+        Timestamp('2019-03-02 09:00:00'),
+        Timestamp('2019-03-02 10:00:00'),
+        Timestamp('2019-03-02 11:00:00'),
+        Timestamp('2019-03-02 12:00:00'),
+        Timestamp('2019-03-02 13:00:00')
+    ],
+    'Pthermal': [
+        10.1687625,
+        9.33894,
+        16.177590000000002,
+        12.6936225,
+        9.50508,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.1325025,
+        0.3782025,
+        9.373747500000002,
+        6.5236275,
+        3.989115,
+        7.725802
+    ],
+    'Ppv': [
+        124.5796,
+        124.91560000000001,
+        118.5708,
+        106.6472,
+        71.9428,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.004,
+        79.44319999999999,
+        103.268,
+        123.5084,
+        126.40599999999999,
+        119.2748,
+        125.531
+    ]
+}
+```

@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "solar_power_plants"
+version = "0.10.0"
+description = "Solar Energy Model process client"
+authors = ["Alberto Molinuevo Martin <alberto.molinuevo@tecnalia.com>"]
+license = "GPLv2"
+readme = "README.md"
+
+# Packages
+packages = [{ include = "solar_energy_model" }]
+
+# Dependencies
+[tool.poetry.dependencies]
+furo = "^2025.9.25"
+geopandas = "^1.0.1"
+python = "^3.10"
+pandas = "^2.2"
+numpy = "^2.2"
+pvlib = "^0.10.4"
+pyproj = "^3.2.1"
+pytest = "^7.4.4"
+pytest-cov = "^4.1.0"
+rasterio = "^1.4.3"
+requests = "^2.32.3"
+
+[tool.poetry.group.dev.dependencies]
+autopep8 = "^2.3.2"
+sphinx = "8.1.2"
+sphinx-autobuild = "2024.10.3"
+sphinx-copybutton = "0.5.2"
