@@ -1,6 +1,6 @@
 # iDesignRES: Solar Energy Model
 
-[![Docs](https://img.shields.io/badge/docs-stable-brightgreen)](https://molinuevo.github.io/molinuevobuildings)
+[![Docs](https://img.shields.io/badge/docs-stable-brightgreen)](https://molinuevo.github.io/molinuevosolar)
 
 This README provides an overview of the iDesignRES Solar Energy Model within iDesignRES.
 
